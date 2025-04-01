@@ -27,8 +27,8 @@ jobs:
     - name: Build the project
       run: dotnet build --configuration Release
 
-    - name: Run unit tests
-      run: dotnet test --configuration Release
+    - name: Run unit tests from the test project only
+      run: dotnet test RemoteMonitoringAndControlAPI.Tests/RemoteMonitoringAndControlAPI.Tests.csproj --configuration Release
 
     - name: Publish the application
       run: dotnet publish --configuration Release --output ./publish
