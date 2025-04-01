@@ -4,22 +4,21 @@ on:
   push:
     branches:
       - main  # Trigger on push to the main branch
-  pull_request:
-    branches:
-      - main  # Trigger on pull request targeting the main branch
 
 jobs:
-  build:
+  build-and-merge:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
+      with:
+        fetch-depth: 0  # Ensure full history for proper branch merging
 
     - name: Set up .NET
       uses: actions/setup-dotnet@v2
       with:
-        dotnet-version: '8.0'  # Specify the .NET version you are using
+        dotnet-version: '8.0'  # Specify your .NET version
 
     - name: Restore dependencies
       run: dotnet restore
@@ -27,8 +26,21 @@ jobs:
     - name: Build the project
       run: dotnet build --configuration Release
 
-    - name: Run unit tests from the test project only
+    - name: Run unit tests
       run: dotnet test RemoteMonitoringAndControlAPI.Tests/RemoteMonitoringAndControlAPI.Tests.csproj --configuration Release
+
+    - name: Merge main into master
+      if: github.ref == 'refs/heads/main'
+      run: |
+        git config --global user.email "action@github.com"
+        git config --global user.name "GitHub Action"
+        git fetch origin
+        git checkout master
+        # Merge main into master with a commit message containing [skip ci] to avoid re-triggering the pipeline unnecessarily.
+        git merge main --no-ff -m "Automated merge of main into master via GitHub Actions [skip ci]"
+        git push origin master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Publish the application
       run: dotnet publish --configuration Release --output ./publish
