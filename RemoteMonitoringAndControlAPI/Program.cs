@@ -166,7 +166,7 @@ app.MapGet("/command", async (int id, ApplicationDbContext dbContext) =>
 
 app.MapGet("/status", async (ApplicationDbContext dbContext) =>
 {
-    var robotStatus = await dbContext.RobotStatuses.FirstOrDefaultAsync() ?? new RobotStatus { Status = "Idle", Position = "0,0", Task = "None" };
+    var robotStatus = await dbContext.RobotStatuses.FirstOrDefaultAsync() ?? new RobotStatus("Idle", "0,0", "None");
     logger.LogInformation("Fetched robot status: {Status}", robotStatus.Status);
     return Results.Ok(robotStatus);
 }).RequireAuthorization();
