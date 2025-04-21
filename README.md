@@ -24,7 +24,7 @@ In parallel, the **Remote Monitoring and Control API Tests** project provides a 
 
 ## 🛠️ Technologies Used
 
-- **Backend Framework:** .NET Minimal APIs (targeting .NET 8/9)
+- **Backend Framework:** .NET Minimal APIs (targeting .NET 9)
 - **Authentication:** JWT Authentication
 - **API Documentation:** Swagger UI
 - **Testing Framework:** xUnit
