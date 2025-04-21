@@ -3,13 +3,13 @@
 This project is a simple Robot Control API built using .NET 8 Minimal APIs with JWT-based authentication. It provides endpoints for logging in, controlling a robot, viewing its status, and managing commands.
 
 ## 🛠️ Technologies Used
-- .NET 8
+- .NET 9
 - JWT Authentication
 - Swagger UI for API documentation
 
 ## 🔑 Key Sections
 Project Overview
-The Robot Control API is a simple and flexible API that allows users to interact with a simulated robot. It demonstrates the power of .NET 8 Minimal APIs, providing a fast, lightweight framework for building secure, production-ready applications. This project focuses on providing users with a straightforward way to send commands, retrieve the robot's status, and manage command history.
+The Robot Control API is a simple and flexible API that allows users to interact with a simulated robot. It demonstrates the power of .NET 9 Minimal APIs, providing a fast, lightweight framework for building secure, production-ready applications. This project focuses on providing users with a straightforward way to send commands, retrieve the robot's status, and manage command history.
 
 Authentication Flow
 The API uses JWT Authentication to secure access to certain endpoints. To interact with protected resources (like sending commands or viewing the robot's status), a user must first authenticate by providing valid credentials (username and password). The /login endpoint issues a JWT token, which can then be used for authorized requests to other endpoints.
@@ -32,7 +32,7 @@ git clone https://github.com/yourusername/robot-control-api.git
 cd robot-control-api
 
 2. Run the Application Locally
-Make sure you have the .NET 8 SDK installed. Then, run the application locally:
+Make sure you have the .NET 9 SDK installed. Then, run the application locally:
 
 bash
 dotnet run

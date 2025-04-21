@@ -14,7 +14,7 @@ Test Utilities: Include helper classes for mock data, authentication utilities, 
 Requirements
 Tools and Dependencies:
 
-.NET SDK: Version 8.0 or higher.
+.NET SDK: Version 9.0 or higher.
 
 NuGet Packages:
 

@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc.Testing;
+﻿using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestPlatform.TestHost;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.AspNetCore.Hosting;
 
 public class ProgramTests : IClassFixture<WebApplicationFactory<Program>>
 {
@@ -22,8 +23,11 @@ public class ProgramTests : IClassFixture<WebApplicationFactory<Program>>
 
     public ProgramTests(WebApplicationFactory<Program> factory)
     {
-        _factory = factory;
-        _client = factory.CreateClient();
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Development");
+        });
+        _client = _factory.CreateClient();
     }
 
     // Test: Login returns JWT token for valid credentials

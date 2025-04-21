@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -7,6 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using RemoteMonitoringAndControlAPI;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,7 +67,7 @@ builder.Services.AddSwaggerGen(c =>
                     Id = "Bearer"
                 }
             },
-            new string[] {}
+            new string[] { }
         }
     });
 });
@@ -91,48 +92,71 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Health check endpoint
+// Health check endpoint updated to return plain text
 app.MapGet("/health", () =>
 {
     logger.LogInformation("Health check called");
-    return Results.Ok("API is healthy");
+    // Return plain text content to avoid JSON serialization issues (no WriteAsJsonAsync involved)
+    return Results.Content("API is healthy", "text/plain");
 });
 
 // Login endpoint for JWT token generation
-app.MapPost("/login", (UserCredentials credentials) =>
+app.MapPost("/login", async (UserCredentials credentials) =>
 {
-    logger.LogInformation("Login attempt by user: {Username}", credentials.Username);
+    logger.LogInformation("Login attempt by user: {Username}", credentials?.Username);
+
+    if (credentials is null)
+    {
+        return Results.Problem("Credentials are null");
+    }
+
+    // Simulate async behavior (e.g., database call)
+    await Task.Yield();
 
     if (credentials.Username == "user" && credentials.Password == "password")
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity(new Claim[] {
+            Subject = new ClaimsIdentity(new[] {
                 new Claim(ClaimTypes.Name, credentials.Username)
             }),
             Expires = DateTime.UtcNow.AddHours(10),
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            SigningCredentials = new SigningCredentials(
+                new SymmetricSecurityKey(key),
+                SecurityAlgorithms.HmacSha256Signature)
         };
+
         var token = tokenHandler.CreateToken(tokenDescriptor);
-        logger.LogInformation("JWT token generated for user: {Username}", credentials.Username);
-        return Results.Ok(new { token = tokenHandler.WriteToken(token) });
+        var jwt = tokenHandler.WriteToken(token);
+
+        // Manually serialize to avoid WriteAsJsonAsync issues.
+        var jsonResponse = System.Text.Json.JsonSerializer.Serialize(new { token = jwt });
+        return Results.Content(jsonResponse, "application/json");
     }
 
-    logger.LogWarning("Unauthorized login attempt by user: {Username}", credentials.Username);
     return Results.Unauthorized();
 });
 
-// API Endpoints
+// POST /command endpoint: creates a new command.
 app.MapPost("/command", async (Command command, ApplicationDbContext dbContext) =>
 {
-    logger.LogInformation("Received command to create: {CommandText}", command.CommandText);
-    dbContext.Commands.Add(command);
-    await dbContext.SaveChangesAsync();
-    logger.LogInformation("Command created with ID: {CommandId}", command.Id);
-    return Results.Ok(new { message = "Command accepted", commandId = command.Id });
+    try
+    {
+        dbContext.Commands.Add(command);
+        await dbContext.SaveChangesAsync();
+        var payload = new { message = "Command accepted", commandId = command.Id };
+        var jsonResponse = System.Text.Json.JsonSerializer.Serialize(payload);
+        return Results.Content(jsonResponse, "application/json");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "❌ ERROR in /command endpoint");
+        return Results.Problem($"Error: {ex.Message}");
+    }
 }).RequireAuthorization();
 
+// PUT /command endpoint: updates an existing command.
 app.MapPut("/command", async (int id, Command updatedCommand, ApplicationDbContext dbContext) =>
 {
     logger.LogInformation("Received command update request for ID: {CommandId}", id);
@@ -140,7 +164,8 @@ app.MapPut("/command", async (int id, Command updatedCommand, ApplicationDbConte
     if (command == null)
     {
         logger.LogWarning("Command not found: {CommandId}", id);
-        return Results.NotFound("Command not found");
+        var errorResponse = System.Text.Json.JsonSerializer.Serialize(new { error = "Command not found" });
+        return Results.Content(errorResponse, "application/json", statusCode: 404);
     }
 
     command.CommandText = updatedCommand.CommandText;
@@ -149,9 +174,12 @@ app.MapPut("/command", async (int id, Command updatedCommand, ApplicationDbConte
     await dbContext.SaveChangesAsync();
 
     logger.LogInformation("Command updated successfully: {CommandId}", id);
-    return Results.Ok(new { message = "Command updated", updatedCommand });
+    var payload = new { message = "Command updated", updatedCommand };
+    var jsonResponse = System.Text.Json.JsonSerializer.Serialize(payload);
+    return Results.Content(jsonResponse, "application/json");
 }).RequireAuthorization();
 
+// GET /command endpoint: fetches a command by ID.
 app.MapGet("/command", async (int id, ApplicationDbContext dbContext) =>
 {
     logger.LogInformation("Fetching command with ID: {CommandId}", id);
@@ -159,31 +187,39 @@ app.MapGet("/command", async (int id, ApplicationDbContext dbContext) =>
     if (command == null)
     {
         logger.LogWarning("Command not found: {CommandId}", id);
-        return Results.NotFound("Command not found");
+        var errorResponse = System.Text.Json.JsonSerializer.Serialize(new { error = "Command not found" });
+        return Results.Content(errorResponse, "application/json", statusCode: 404);
     }
-    return Results.Ok(command);
+    var jsonResponse = System.Text.Json.JsonSerializer.Serialize(command);
+    return Results.Content(jsonResponse, "application/json");
 }).RequireAuthorization();
 
+// GET /status endpoint: retrieves the robot status.
 app.MapGet("/status", async (ApplicationDbContext dbContext) =>
 {
     var robotStatus = await dbContext.RobotStatuses.FirstOrDefaultAsync() ?? new RobotStatus("Idle", "0,0", "None");
     logger.LogInformation("Fetched robot status: {Status}", robotStatus.Status);
-    return Results.Ok(robotStatus);
+    var jsonResponse = System.Text.Json.JsonSerializer.Serialize(robotStatus);
+    return Results.Content(jsonResponse, "application/json");
 }).RequireAuthorization();
 
+// GET /history endpoint: retrieves command history.
 app.MapGet("/history", async (ApplicationDbContext dbContext) =>
 {
     var commandHistory = await dbContext.Commands.ToListAsync();
     logger.LogInformation("Fetched command history: {CommandCount} commands", commandHistory.Count);
-    return Results.Ok(commandHistory);
+    var jsonResponse = System.Text.Json.JsonSerializer.Serialize(commandHistory);
+    return Results.Content(jsonResponse, "application/json");
 }).RequireAuthorization();
 
 app.Run();
 
+// Record for user credentials.
 public record UserCredentials
 {
     public string Username { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
 }
 
+// Expose Program class for integration testing.
 public partial class Program { }
