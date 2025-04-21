@@ -16,9 +16,9 @@ jobs:
         fetch-depth: 0  # Ensure full history for proper branch merging
 
     - name: Set up .NET
-      uses: actions/setup-dotnet@v2
+      uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '8.0'  # Specify your .NET version
+        dotnet-version: '9.0.100-preview.7.21379.14'
 
     - name: Restore dependencies
       run: dotnet restore
