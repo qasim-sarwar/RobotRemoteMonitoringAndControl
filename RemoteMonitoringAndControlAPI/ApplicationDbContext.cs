@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel;
 
 namespace RemoteMonitoringAndControlAPI
 {
@@ -27,8 +28,14 @@ namespace RemoteMonitoringAndControlAPI
     public class Command
     {
         public int Id { get; set; }
+
+        [Description("The text of the command (e.g., 'Move Forward')")]
         public string CommandText { get; set; }
+
+        [Description("The ID or name of the target robot")]
         public string Robot { get; set; }
+
+        [Description("The username of the person issuing the command")]
         public string User { get; set; }
 
         // Parameterless constructor (required for object initializer)

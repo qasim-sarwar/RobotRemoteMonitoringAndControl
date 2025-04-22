@@ -9,6 +9,7 @@ using System.Text;
 using RemoteMonitoringAndControlAPI;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
+using System.ComponentModel;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -255,7 +256,10 @@ app.Run();
 // Record for user credentials.
 public record UserCredentials
 {
+    [Description("The User name.")]
     public string Username { get; set; } = string.Empty;
+
+    [Description("The Password.")]
     public string Password { get; set; } = string.Empty;
 }
 

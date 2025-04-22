@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
-using RemoteMonitoringAndControlAPI; // Your application namespace
+using RemoteMonitoringAndControlAPI;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
