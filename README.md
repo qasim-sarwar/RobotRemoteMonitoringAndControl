@@ -6,7 +6,7 @@ Project Overview The Robot Control API is a lightweight yet powerful service tha
 In parallel, the Remote Monitoring and Control API Tests project provides a rigorous set of unit and integration tests. These tests simulate the API’s runtime behavior using the WebApplicationFactory and an in-memory database, ensuring that both individual endpoints and overall system behaviors are validated efficiently and in isolation.
 
 ## 🛠️ Technologies Used
-Backend Framework: .NET 9 Minimal APIs
+Backend Framework: .NET 9 Minimal APIs with c#13
 
 Authentication: JWT Authentication
 
